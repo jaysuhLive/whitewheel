@@ -45,6 +45,16 @@ class Freeway_Lidar_Ttc
       signal2_checker_teb = 0;
     }
 
+    void log_param() {
+
+        ROS_INFO("scan_topic: %s", scan_topic_);
+        ROS_INFO("rp_lidar_s2: %s", rp_lidar_s2_);
+        ROS_INFO("signal_distance: %f", signal_distance_);
+        ROS_INFO("signal_distance_teb: %f", signal_distance_teb_);
+        ROS_INFO("signal_release: %f", signal_release_);
+        ROS_INFO("obstacle_cound: %d", obstacle_count_);
+    }
+
     bool isFrontObstacleDetected() const
     {
       return (signal_checker > 0 && signal_checker <= obstacle_count_);
@@ -68,8 +78,7 @@ class Freeway_Lidar_Ttc
     uint32_t signal_checker_teb;
     uint32_t signal2_checker_teb;
 
-        void scan_update(const sensor_msgs::LaserScan& input_scan)
-    {
+    void scan_update(const sensor_msgs::LaserScan& input_scan) {
 
       if(rp_lidar_s2_) {
       if (!input_scan.ranges.empty()) {
@@ -177,6 +186,7 @@ int main(int argc, char **argv)
   ros::Publisher front_obstacle_pub = n.advertise<std_msgs::Bool>("/freeway/front_obstacle", 10);
   ros::Publisher front_obstacle_teb_pub = n.advertise<std_msgs::Bool>("/freeway/front_obstacle_teb", 10);
   Freeway_Lidar_Ttc FLT = Freeway_Lidar_Ttc(&n);
+  FLT.log_param();
   ros::Rate loop_rate(26);
 
   while (ros::ok())

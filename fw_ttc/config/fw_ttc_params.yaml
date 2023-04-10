@@ -1,5 +1,5 @@
 scan_topic: "scan_akusense"
-rp_lidar_s2: true
+rp_lidar_s2: false
 obstalce_count: 30
 signal_distance: 0.4
 signal_distance_teb: 0.45

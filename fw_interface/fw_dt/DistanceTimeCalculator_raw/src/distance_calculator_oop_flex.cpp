@@ -255,8 +255,8 @@ void check_block_time(ros::Time current_time) {
    front_blocked_path_flag = false; 
   }
  else if ((current_time.toSec() - final_front_blocked_path_msg_time.toSec()) > 0.2 && front_blocked_path_flag == false) {
-    std_msgs::Empty resume_msg;
-    resume_pub2.publish(resume_msg);
+    //std_msgs::Empty resume_msg;
+    //resume_pub2.publish(resume_msg);
     front_blocked_path_flag = true;
   }
 }
