@@ -50,11 +50,10 @@ class Freeway_Lidar_Ttc
         ROS_INFO_STREAM("scan_topic: " << scan_topic_);
         if(rp_lidar_s2_) ROS_INFO("rp_lidar_s2: true");
 	else ROS_INFO("rp_lidar_s2: false");
-        ROS_INFO("rp_lidar_s2: %c", rp_lidar_s2_);
         ROS_INFO("signal_distance: %f", signal_distance_);
         ROS_INFO("signal_distance_teb: %f", signal_distance_teb_);
         ROS_INFO("signal_release: %f", signal_release_);
-        ROS_INFO("obstacle_cound: %d", obstacle_count_);
+        ROS_INFO("obstacle_count: %d", obstacle_count_);
     }
 
     bool isFrontObstacleDetected() const
