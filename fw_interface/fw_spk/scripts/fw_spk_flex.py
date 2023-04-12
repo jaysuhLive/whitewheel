@@ -17,7 +17,7 @@ dt_f=True
 goal_sub_flag = False
 dt_count=0
 ct=0.0
-auto_driving_timer_time = 15.0
+auto_driving_timer_time = 7.0
 previous_arrival_time = 0.0
 rospack = rospkg.RosPack()
 pkg_path = rospack.get_path('freeway_spk')
@@ -32,19 +32,19 @@ def play_audio(file_path):
         audio_playing = False
 
 def goal_sub(data):
-    rospy.sleep(0.2)
-    play_audio(pkg_path+'/scripts/source/goal_departure.mp3')
+    #rospy.sleep(0.2)
+    play_audio(pkg_path+'/scripts/source/gn/goal_departure.mp3')
     #playsound(pkg_path+'/scripts/source/goal_departure.mp3')
     rospy.loginfo("Goal_Departure")
 
 def mb_goal_sub(data):
-    rospy.sleep(0.2)
-    play_audio(pkg_path+'/scripts/source/goal_departure.mp3')
+    #rospy.sleep(0.2)
+    play_audio(pkg_path+'/scripts//source/gn/goal_departure.mp3')
     #playsound(pkg_path+'/scripts/source/goal_departure.mp3')
     rospy.loginfo("Goal_Departure")
 
 def cancel_sub(data):
-    play_audio(pkg_path+'/scripts/source/goal_canceled.mp3')
+    #play_audio(pkg_path+'/scripts/source/goal_canceled.mp3')
     #playsound(pkg_path+'/scripts/source/goal_canceled.mp3')
     rospy.loginfo("Goal_Canceled")
 
@@ -66,11 +66,11 @@ def distancetimecalculator_sub(data):
             goal_sub_flag = False        
     if data.distance_remaining != 0.0:
         if rospy.Time.now().to_sec() - ct >= auto_driving_timer_time and dt_f == True and data.arrival_time > 7.0:
-            play_audio(pkg_path+'/scripts/source/auto_driving.mp3')
+            play_audio(pkg_path+'/scripts/source/gn/auto_driving.mp3')
             #playsound(pkg_path+'/scripts/source/auto_driving.mp3')
             ct = rospy.Time.now().to_sec()
         elif data.arrival_time <= 7.0 and dt_count < 1 and goal_sub_flag != False:
-            play_audio(pkg_path+'/scripts/source/goal_close.mp3')
+            #play_audio(pkg_path+'/scripts/source/gn/goal_close.mp3')
             #playsound(pkg_path+'/scripts/source/goal_close.mp3')
             dt_count = dt_count+1
             dt_f = False
@@ -85,7 +85,7 @@ def distancetimecalculator_sub(data):
     
 def am_sub(data):
     if data.am_status2 == True:
-        play_audio(pkg_path+'/scripts/source/auto_driving.mp3')
+        play_audio(pkg_path+'/scripts/source/gn/auto_driving.mp3')
         #playsound(pkg_path+'/scripts/source/auto_driving.mp3')
         rospy.loginfo("Auto_driving")
     elif data.am_status2 == False:
@@ -95,12 +95,12 @@ def am_sub(data):
 
 def result_sub(data):
     if data.status.status == 3:
-        rospy.sleep(1)
-        play_audio(pkg_path+'/scripts/source/goal_arrived.mp3')
+        #rospy.sleep(1)
+        play_audio(pkg_path+'/scripts/source/gn/goal_arrived.mp3')
         #playsound(pkg_path+'/scripts/source/goal_arrived.mp3')
         rospy.loginfo("Goal_Arrived")
     elif data.status.status == 1:
-        rospy.sleep(1)
+        #rospy.sleep(1)
         rospy.loginfo("goal_moving")
     elif data.status.status == 4:
         play_audio(pkg_path+'/scripts/source/goal_cannotreach.mp3')
@@ -124,7 +124,7 @@ def main_f():
 
     #   while not rospy.is_shutdown():
     #     rate.sleep()
-      play_audio(pkg_path+'/scripts/source/first_start.mp3')
+      play_audio(pkg_path+'/scripts/source/gn/first_start.mp3')
       #playsound(pkg_path+'/scripts/source/first_start.mp3')
       rospy.spin()
   
