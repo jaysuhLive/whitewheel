@@ -55,7 +55,7 @@
   <joint name="scan_joint" type="fixed">
     <parent link="base_link"/>
     <child link="base_scan"/>
-    <origin xyz="0.47 0 0.096" rpy="0 0 ${PI}"/>
+    <origin xyz="0.468 0 0.096" rpy="0 0 ${PI}"/>
   </joint>
 
   <link name="base_scan">
@@ -85,7 +85,7 @@
   <joint name="scan_akusense_joint" type="fixed">
     <parent link="base_link"/>
     <child link="base_scan_akusense"/>
-    <origin xyz="0.465 0 0.056" rpy="0 0 0"/>
+    <origin xyz="0.469 0 0.056" rpy="0 0 0"/>
   </joint>
 
   <link name="base_scan_akusense">
@@ -292,11 +292,11 @@
   </link> -->
 
   <xacro:sensor_d455 parent="base_link" name="d455_R" use_nominal_extrinsics="$(arg use_nominal_extrinsics)">
-    <origin xyz="0.540 -0.35 0.541" rpy="0 0 0"/>
+    <origin xyz="0.5 -0.38 0.521" rpy="0 0 0"/>
   </xacro:sensor_d455>
 
   <xacro:sensor_d455 parent="base_link" name="d455_L" use_nominal_extrinsics="$(arg use_nominal_extrinsics)">
-    <origin xyz="0.540 0.35 0.541" rpy="0 0 0"/>
+    <origin xyz="0.5 0.38 0.521" rpy="0 0 0"/>
   </xacro:sensor_d455>
 
 </robot>

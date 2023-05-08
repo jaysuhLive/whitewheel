@@ -18,12 +18,12 @@ class Freeway_Joy_Fw
   public:
     Freeway_Joy_Fw(ros::NodeHandle *n)
     {
-      cmd_pub = n->advertise<geometry_msgs::Twist>("/cmd_vel", 10);
+      cmd_pub = n->advertise<geometry_msgs::Twist>("/cmd_vel/joy", 10);
       am_mode_pub = n->advertise<freeway_joyfw::stm_am_msg>("freeway/am_status", 10);
       move_base_flex_cancel_pub = n->advertise<actionlib_msgs::GoalID>("move_base_flex/move_base/cancel", 10);
       diag_sub = n->subscribe("freeway/diagnostics", 100, &Freeway_Joy_Fw::get_diagnostics_cb, this);
       front_obstacle_sub = n->subscribe("/freeway/front_obstacle", 100, &Freeway_Joy_Fw::front_obstacle_cb, this);
-      cmd_vel_ui_sub = n->subscribe("/cmd_vel_ui", 10, &Freeway_Joy_Fw::cmd_vel_ui_cb, this);
+      cmd_vel_ui_sub = n->subscribe("/cmd_vel/ui", 10, &Freeway_Joy_Fw::cmd_vel_ui_cb, this);
       diagnostics_time;
       stm_msg;
       front_obstacle_detected = false;

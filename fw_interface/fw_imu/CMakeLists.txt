@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(fw_ttc)
+project(fw_imu)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -10,8 +10,6 @@ project(fw_ttc)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
-  geometry_msgs
-  nav_msgs
   std_msgs
 )
 
@@ -106,7 +104,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES fw_ttc
+#  LIBRARIES fw_imu
 #  CATKIN_DEPENDS roscpp sensor_msgs std_msgs
 #  DEPENDS system_lib
 )
@@ -122,13 +120,9 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(fw_ttc_node src/lidar_ttc.cpp)
-target_link_libraries(fw_ttc_node ${catkin_LIBRARIES})
-
-
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/fw_ttc.cpp
+#   src/${PROJECT_NAME}/fw_imu.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -139,7 +133,7 @@ target_link_libraries(fw_ttc_node ${catkin_LIBRARIES})
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/fw_ttc_node.cpp)
+add_executable(${PROJECT_NAME}_node src/imu_covariance_adjuster.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -152,9 +146,9 @@ target_link_libraries(fw_ttc_node ${catkin_LIBRARIES})
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(${PROJECT_NAME}_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(${PROJECT_NAME}_node
+   ${catkin_LIBRARIES}
+ )
 
 #############
 ## Install ##
@@ -203,7 +197,7 @@ target_link_libraries(fw_ttc_node ${catkin_LIBRARIES})
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_fw_ttc.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_fw_imu.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

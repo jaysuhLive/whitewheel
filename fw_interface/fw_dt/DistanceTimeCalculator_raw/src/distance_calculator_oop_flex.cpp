@@ -21,7 +21,8 @@
 #include "freeway_msgs/FreewayStatus.h"
 
 #define fix_pose true
-#define POSE_RESET_TIME 10.0
+#define fix_pose_pub false
+#define POSE_RESET_TIME 15.0
 
 // void get_goal_cb(const geometry_msgs::PoseStamped &goal_msg) {
 //   geometry_msgs::PoseStamped goal;
@@ -42,7 +43,7 @@ class Distance_TimeCalculator
       resume_pub2 = n->advertise<std_msgs::Empty>("freeway/resume", 10);
       cancel_pub = n->advertise<actionlib_msgs::GoalID>("move_base_flex/move_base/cancel", 10);
       cancel_pub2 = n->advertise<std_msgs::Empty>("freeway/goal_cancel", 10);
-      cmd_pub = n->advertise<geometry_msgs::Twist>("cmd_vel", 10);
+      cmd_pub = n->advertise<geometry_msgs::Twist>("cmd_vel/nav", 10);
       pose_pub = n->advertise<geometry_msgs::PoseWithCovarianceStamped>("freeway/initialpose",10);
       cancel_sub = n->subscribe("freeway/goal_cancel", 100, &Distance_TimeCalculator::cancel_cb, this);
       feedback_sub = n->subscribe("move_base_flex/move_base/feedback", 1000, &Distance_TimeCalculator::get_feedback_cb, this);
@@ -226,10 +227,12 @@ void check_pose_time(ros::Time current_time, std::string file_path)
     final_pose.pose.covariance[6]=0.0;
     final_pose.pose.covariance[7]=0.05;
     final_pose.pose.covariance[35]=0.02;
-    pose_pub.publish(final_pose);
-    final_pose_time = current_time; 
-    ROS_INFO("set initialpose to last pose");
-    
+    if(fix_pose_pub) { 
+	pose_pub.publish(final_pose);
+     ROS_INFO("set initialpose to last pose");
+    }
+    final_pose_time = current_time;
+
     std::ofstream writeFile(file_path.data());
     if(writeFile.is_open()) {
       writeFile << "initial_pose_x: " << final_pose.pose.pose.position.x << std::endl;

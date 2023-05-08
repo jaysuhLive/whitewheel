@@ -31,6 +31,9 @@ def play_audio(file_path):
         subprocess.call(['mpg123', '-q' ,file_path])
         audio_playing = False
 
+def manual_spk_call_sub(data):
+    play_audio(pkg_path+'/scripts/source/gn/first_start.mp3')
+
 def goal_sub(data):
     #rospy.sleep(0.2)
     play_audio(pkg_path+'/scripts/source/gn/goal_departure.mp3')
@@ -39,7 +42,7 @@ def goal_sub(data):
 
 def mb_goal_sub(data):
     #rospy.sleep(0.2)
-    play_audio(pkg_path+'/scripts//source/gn/goal_departure.mp3')
+    play_audio(pkg_path+'/scripts/source/gn/goal_departure.mp3')
     #playsound(pkg_path+'/scripts/source/goal_departure.mp3')
     rospy.loginfo("Goal_Departure")
 
@@ -114,6 +117,7 @@ def main_f():
   
       rate = rospy.Rate(5) # ROS Rate at 5Hz
       rospy.Subscriber("move_base_simple/goal", PoseStamped, goal_sub)
+      rospy.Subscriber("freeway/manual_spk_call", Empty, manual_spk_call_sub)
     #   rospy.Subscriber("move_base/goal", MoveBaseActionGoal, mb_goal_sub)
     #   rospy.Subscriber("move_base_flex/move_base/cancel", GoalID, cancel_sub)
       rospy.Subscriber("freeway/goal_cancel", Empty, cancel_sub)
