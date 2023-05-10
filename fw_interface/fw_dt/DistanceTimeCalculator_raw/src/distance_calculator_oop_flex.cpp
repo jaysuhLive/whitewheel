@@ -2,6 +2,7 @@
 #include <ros/package.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Bool.h>
+#include <std_msgs/Int8.h>
 #include <std_msgs/Empty.h>
 #include <std_srvs/Empty.h>
 #include <nav_msgs/Path.h>
@@ -39,14 +40,15 @@ class Distance_TimeCalculator
   public:
     Distance_TimeCalculator(ros::NodeHandle *n)
     {
-      resume_pub = n->advertise<geometry_msgs::PoseStamped>("move_base_simple/goal", 100);
+      resume_pub = n->advertise<geometry_msgs::PoseStamped>("move_base_simple/goal", 10);
       resume_pub2 = n->advertise<std_msgs::Empty>("freeway/resume", 10);
+      resume_pub_feedback = n->advertise<std_msgs::Int8>("freeway/resume/feedback", 10);
       cancel_pub = n->advertise<actionlib_msgs::GoalID>("move_base_flex/move_base/cancel", 10);
       cancel_pub2 = n->advertise<std_msgs::Empty>("freeway/goal_cancel", 10);
       cmd_pub = n->advertise<geometry_msgs::Twist>("cmd_vel/nav", 10);
       pose_pub = n->advertise<geometry_msgs::PoseWithCovarianceStamped>("freeway/initialpose",10);
-      cancel_sub = n->subscribe("freeway/goal_cancel", 100, &Distance_TimeCalculator::cancel_cb, this);
-      feedback_sub = n->subscribe("move_base_flex/move_base/feedback", 1000, &Distance_TimeCalculator::get_feedback_cb, this);
+      cancel_sub = n->subscribe("freeway/goal_cancel", 10, &Distance_TimeCalculator::cancel_cb, this);
+      feedback_sub = n->subscribe("move_base_flex/move_base/feedback", 10, &Distance_TimeCalculator::get_feedback_cb, this);
       status_sub = n->subscribe("move_base_flex/move_base/status", 10, &Distance_TimeCalculator::get_status_cb, this);
       velocity_sub = n->subscribe("cmd_vel", 10, &Distance_TimeCalculator::get_velocity_cb, this);
       getpath_sub = n->subscribe("move_base_flex/TebLocalPlannerROS/global_plan", 10, &Distance_TimeCalculator::get_globalpath_cb, this);
@@ -94,11 +96,16 @@ void cancel_cb(const std_msgs::Empty &cancel_msg) {
 }
 
 void resume_cb(const std_msgs::Empty &resume_msg) {
-    ROS_INFO("status_info_: %d\n", status_info_);
-    ROS_INFO("Resume Triggered to  x:%f, y:%f, z:%f", final_goal.pose.position.x, final_goal.pose.position.y, final_goal.pose.position.z);
-    if((!(status_info_ == 4 || status_info_ == 3)) && (!(final_goal.pose.position.x == 0.0 || final_goal.pose.position.y == 0.0))) {
+    std_msgs::Int8 resume_pub_feedback_msg;
+    if((!(status_info_ == 4 || status_info_ == 3 || status_info_ == 1)) && (!(final_goal.pose.position.x == 0.0 || final_goal.pose.position.y == 0.0))) {
       resume_pub.publish(final_goal);
+      resume_pub_feedback_msg.data = status_info_;
+      ROS_INFO("Resume Triggered to  x:%f, y:%f, z:%f, status_info:%d", final_goal.pose.position.x, final_goal.pose.position.y, final_goal.pose.position.z, resume_pub_feedback_msg.data);
     }
+    else {
+      resume_pub_feedback_msg.data = -1;
+    }
+    resume_pub_feedback.publish(resume_pub_feedback_msg);
 }
 
 void goal_cb(const geometry_msgs::PoseStamped &goal_msg) {
@@ -254,7 +261,7 @@ void pose_cb(const geometry_msgs::PoseWithCovarianceStamped &pose_msgs) {
 void check_block_time(ros::Time current_time) {
  if ((current_time.toSec() - final_front_blocked_path_msg_time.toSec()) <= 0.2 && front_blocked_path_flag == true) {
    std_msgs::Empty stop_msg;
-   cancel_pub2.publish(stop_msg);
+   //cancel_pub2.publish(stop_msg);
    front_blocked_path_flag = false; 
   }
  else if ((current_time.toSec() - final_front_blocked_path_msg_time.toSec()) > 0.2 && front_blocked_path_flag == false) {
@@ -308,6 +315,7 @@ double r_status_info_()
   private:
     ros::Publisher resume_pub;
     ros::Publisher resume_pub2;
+    ros::Publisher resume_pub_feedback;
     ros::Publisher cmd_pub;
     ros::Publisher cancel_pub;
     ros::Publisher cancel_pub2;

@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   tf2_geometry_msgs
   freeway_joyfw
+  freeway_msgs
 )
 
 ## System dependencies are found with CMake's conventions

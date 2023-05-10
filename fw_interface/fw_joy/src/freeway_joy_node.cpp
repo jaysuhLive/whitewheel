@@ -7,6 +7,7 @@
 #include <sstream>
 #include "geometry_msgs/Twist.h"
 #include "actionlib_msgs/GoalStatusArray.h"
+#include "freeway_msgs/DistanceTimeCalculator.h"
 #include "freeway_joyfw/stm_fw_msg.h"
 #include "freeway_joyfw/stm_am_msg.h"
 #include "freeway_joyfw/stm_fw_srv.h"
@@ -19,27 +20,32 @@ class Freeway_Joy_Fw
     Freeway_Joy_Fw(ros::NodeHandle *n)
     {
       cmd_pub = n->advertise<geometry_msgs::Twist>("/cmd_vel/joy", 10);
+      cmd_emer_pub = n->advertise<geometry_msgs::Twist>("/cmd_vel/emer", 10);
       am_mode_pub = n->advertise<freeway_joyfw::stm_am_msg>("freeway/am_status", 10);
       move_base_flex_cancel_pub = n->advertise<actionlib_msgs::GoalID>("move_base_flex/move_base/cancel", 10);
       diag_sub = n->subscribe("freeway/diagnostics", 100, &Freeway_Joy_Fw::get_diagnostics_cb, this);
       front_obstacle_sub = n->subscribe("/freeway/front_obstacle", 100, &Freeway_Joy_Fw::front_obstacle_cb, this);
       cmd_vel_ui_sub = n->subscribe("/cmd_vel/ui", 10, &Freeway_Joy_Fw::cmd_vel_ui_cb, this);
+      dt_sub = n->subscribe("/freeway/distancetimecalculator", 10, &Freeway_Joy_Fw::dt_sub_cb, this);
       diagnostics_time;
       stm_msg;
+      dt_msg;
       front_obstacle_detected = false;
     }
 
     bool am_mode_cb(freeway_joyfw::stm_fw_srv::Request &req, freeway_joyfw::stm_fw_srv::Response &res);
 
-    void front_obstacle_cb(const std_msgs::Bool& front_obstacle_msg)
+    void front_obstacle_cb(const std_msgs::Bool::ConstPtr& front_obstacle_msg)
     {
-      front_obstacle_detected = front_obstacle_msg.data;
+      front_obstacle_detected = front_obstacle_msg->data;
     }
-    
+
+    void dt_sub_cb(const freeway_msgs::DistanceTimeCalculator::ConstPtr& msg) {
+        dt_msg = *msg;
+    }
 
     void get_diagnostics_cb(const freeway_joyfw::stm_fw_msg &diag_msg) {
       geometry_msgs::Twist cmd_vel_msg;
-      actionlib_msgs::GoalID empty_goal;
       stm_msg = diag_msg;
       diagnostics_time = ros::Time::now();
       if (stm_msg.am_status == true && stm_msg.e_stop_status == true)
@@ -51,10 +57,8 @@ class Freeway_Joy_Fw
           else {
             cmd_vel_msg.linear.x =  diag_msg.cmd_vel_mcu.linear.x;
           }
-
           cmd_vel_msg.angular.z = diag_msg.cmd_vel_mcu.angular.z;
           cmd_pub.publish(cmd_vel_msg);
-          
         }
         else {
           cmd_vel_msg.linear.x = diag_msg.cmd_vel_mcu.linear.x;
@@ -66,54 +70,61 @@ class Freeway_Joy_Fw
       {
         cmd_vel_msg.linear.x = 0.0;//diag_msg.cmd_vel_mcu.linear.x;
         cmd_vel_msg.angular.z = 0.0;//diag_msg.cmd_vel_mcu.angular.z;
-        cmd_pub.publish(cmd_vel_msg);
-        move_base_flex_cancel_pub.publish(empty_goal);
+        cmd_emer_pub.publish(cmd_vel_msg);
+        if (dt_msg.status_info == 1) {
+            actionlib_msgs::GoalID empty_goal;
+            move_base_flex_cancel_pub.publish(empty_goal);
+        }
       }
     }
 
     void cmd_vel_ui_cb(const geometry_msgs::Twist &cmd_vel_ui_msg) {
-    geometry_msgs::Twist cmd_vel_msg;
-    ros::Duration timeout_duration(0.5);
-    bool active_flag = false;
-    if (ros::Time::now() - diagnostics_time < timeout_duration) active_flag = true;
-    else active_flag = false;
+        geometry_msgs::Twist cmd_vel_msg;
+        ros::Duration timeout_duration(0.25);
+        bool active_flag = false;
+        if (ros::Time::now() - diagnostics_time < timeout_duration) active_flag = true;
+        else active_flag = false;
 
-    if (active_flag == false)
-    {
-        if(front_obstacle_detected) {
-          if (cmd_vel_ui_msg.linear.x > 0.0) {
-              cmd_vel_msg.linear.x = 0.0;
+        if (active_flag == false)
+        {
+            if(front_obstacle_detected) {
+            if (cmd_vel_ui_msg.linear.x > 0.0) {
+               cmd_vel_msg.linear.x = 0.0;
+            }
+            else {
+             cmd_vel_msg.linear.x =  cmd_vel_ui_msg.linear.x;
+            }
+
+            cmd_vel_msg.angular.z = cmd_vel_ui_msg.angular.z;
+            cmd_pub.publish(cmd_vel_msg);
+
+            }
+            else {
+            cmd_vel_msg.linear.x = cmd_vel_ui_msg.linear.x;
+            cmd_vel_msg.angular.z = cmd_vel_ui_msg.angular.z;
+            cmd_pub.publish(cmd_vel_msg);
           }
-          else {
-            cmd_vel_msg.linear.x =  cmd_vel_ui_msg.linear.x;
-          }
+       }
 
-          cmd_vel_msg.angular.z = cmd_vel_ui_msg.angular.z;
-          cmd_pub.publish(cmd_vel_msg);
-
-        }
-        else {
-          cmd_vel_msg.linear.x = cmd_vel_ui_msg.linear.x;
-          cmd_vel_msg.angular.z = cmd_vel_ui_msg.angular.z;
-          cmd_pub.publish(cmd_vel_msg);
-        }
-   }
-      if (active_flag == true && stm_msg.e_stop_status == false)
-      {
-        cmd_vel_msg.linear.x = 0.0;//diag_msg.cmd_vel_mcu.linear.x;
-        cmd_vel_msg.angular.z = 0.0;//diag_msg.cmd_vel_mcu.angular.z;
-        cmd_pub.publish(cmd_vel_msg);
-      }
-    }
+//       if (active_flag == true && stm_msg.e_stop_status == false)
+//       {
+//         cmd_vel_msg.linear.x = 0.0;//diag_msg.cmd_vel_mcu.linear.x;
+//         cmd_vel_msg.angular.z = 0.0;//diag_msg.cmd_vel_mcu.angular.z;
+//         cmd_emer_pub.publish(cmd_vel_msg);
+//       }
+     }
 
   private:
     ros::Publisher cmd_pub;
+    ros::Publisher cmd_emer_pub;
     ros::Publisher move_base_flex_cancel_pub;
     ros::Publisher am_mode_pub;
     ros::Subscriber diag_sub;
     ros::Subscriber front_obstacle_sub;
     ros::Subscriber cmd_vel_ui_sub;
+    ros::Subscriber dt_sub;
     freeway_joyfw::stm_fw_msg stm_msg;
+    freeway_msgs::DistanceTimeCalculator dt_msg;
     ros::Time diagnostics_time;
     bool front_obstacle_detected = false;
 };
