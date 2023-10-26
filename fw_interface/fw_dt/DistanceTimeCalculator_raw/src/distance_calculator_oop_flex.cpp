@@ -23,7 +23,7 @@
 
 #define fix_pose true
 #define fix_pose_pub false
-#define POSE_RESET_TIME 15.0
+#define POSE_RESET_TIME 10.0
 
 // void get_goal_cb(const geometry_msgs::PoseStamped &goal_msg) {
 //   geometry_msgs::PoseStamped goal;
@@ -48,12 +48,14 @@ class Distance_TimeCalculator
       cmd_pub = n->advertise<geometry_msgs::Twist>("cmd_vel/nav", 10);
       pose_pub = n->advertise<geometry_msgs::PoseWithCovarianceStamped>("freeway/initialpose",10);
       cancel_sub = n->subscribe("freeway/goal_cancel", 10, &Distance_TimeCalculator::cancel_cb, this);
+      pause_sub = n->subscribe("freeway/goal_pause", 10, &Distance_TimeCalculator::pause_cb, this);
       feedback_sub = n->subscribe("move_base_flex/move_base/feedback", 10, &Distance_TimeCalculator::get_feedback_cb, this);
       status_sub = n->subscribe("move_base_flex/move_base/status", 10, &Distance_TimeCalculator::get_status_cb, this);
       velocity_sub = n->subscribe("cmd_vel", 10, &Distance_TimeCalculator::get_velocity_cb, this);
       getpath_sub = n->subscribe("move_base_flex/TebLocalPlannerROS/global_plan", 10, &Distance_TimeCalculator::get_globalpath_cb, this);
       resume_sub = n->subscribe("freeway/resume",10, &Distance_TimeCalculator::resume_cb, this);
       goal_sub = n->subscribe("move_base_simple/goal", 10, &Distance_TimeCalculator::goal_cb, this);
+      freeway_goal_sub = n->subscribe("freeway/goal", 10, &Distance_TimeCalculator::freeway_goal_cb, this);
       pose_sub = n->subscribe("freeway/localization_pose", 10, &Distance_TimeCalculator::pose_cb, this);
       moving_check_sub = n->subscribe("freeway/moving_check", 10 , &Distance_TimeCalculator::moving_check_cb ,this);
       finitialpose_sub = n->subscribe("freeway/finitialpose", 10, &Distance_TimeCalculator::finitialpose_cb, this);
@@ -95,6 +97,17 @@ void cancel_cb(const std_msgs::Empty &cancel_msg) {
   cancel_pub.publish(empty_goal);
 }
 
+
+void pause_cb(const std_msgs::Empty &pause_msg) {
+  geometry_msgs::Twist cmd_vel_msg;
+  actionlib_msgs::GoalID empty_goal;
+  cmd_vel_msg.linear.x = 0.0;
+  cmd_vel_msg.angular.z = 0.0;
+
+  cmd_pub.publish(cmd_vel_msg);
+  cancel_pub.publish(empty_goal);
+}
+
 void resume_cb(const std_msgs::Empty &resume_msg) {
     std_msgs::Int8 resume_pub_feedback_msg;
     if((!(status_info_ == 4 || status_info_ == 3 || status_info_ == 1)) && (!(final_goal.pose.position.x == 0.0 || final_goal.pose.position.y == 0.0))) {
@@ -110,6 +123,13 @@ void resume_cb(const std_msgs::Empty &resume_msg) {
 
 void goal_cb(const geometry_msgs::PoseStamped &goal_msg) {
   final_goal = goal_msg;
+}
+
+void freeway_goal_cb(const geometry_msgs::PoseStamped &goal_msg) {
+    geometry_msgs::PoseStamped goal_point;
+    goal_point = goal_msg;
+
+    resume_pub.publish(goal_point);
 }
 
 void get_status_cb(const actionlib_msgs::GoalStatusArray &status_msg) {
@@ -321,12 +341,14 @@ double r_status_info_()
     ros::Publisher cancel_pub2;
     ros::Publisher pose_pub;
     ros::Subscriber cancel_sub;
+    ros::Subscriber pause_sub;
     ros::Subscriber feedback_sub;
     ros::Subscriber status_sub;
     ros::Subscriber velocity_sub; 
     ros::Subscriber getpath_sub;
     ros::Subscriber resume_sub;
     ros::Subscriber goal_sub;
+    ros::Subscriber freeway_goal_sub;
     ros::Subscriber pose_sub;
     ros::Subscriber moving_check_sub;
     ros::Subscriber finitialpose_sub;

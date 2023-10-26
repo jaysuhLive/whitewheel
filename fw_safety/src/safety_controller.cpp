@@ -162,6 +162,7 @@ class Freeway_Safety
       actionlib_msgs::GoalID empty_goal;
 //      std_msgs::Empty brake_msg;
       geometry_msgs::Twist zero_velocity;
+      std_msgs::Empty resume_msg;
       zero_velocity = geometry_msgs::Twist();
       move_base_cancel_pub.publish(empty_goal);
 //      brake_stop_pub.publish(brake_msg);
@@ -171,6 +172,7 @@ class Freeway_Safety
                 cmd_e_vel_pub.publish(zero_velocity);
 	        }
 	        else {
+                //resume_pub.publish(resume_msg);
 	            e_stop_timer.stop();
         	}
         });

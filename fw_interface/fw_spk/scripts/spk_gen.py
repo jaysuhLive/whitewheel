@@ -9,7 +9,7 @@ from playsound import playsound
 
 file_name = 'gen.mp3'
 
-text = "안녕하세요 프리웨이 입니다."
+text = "hello gys."
 tts_ko = gTTS(text=text, lang='ko')
 tts_ko.save(file_name)
 #playsound(file_name)
